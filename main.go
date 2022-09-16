@@ -47,6 +47,6 @@ func main() {
 		allusers = append(allusers, employeeFound)
 	}
 
-	fmt.Println((allusers))
+	fmt.Println(allusers)
 
 }

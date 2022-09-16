@@ -95,8 +95,8 @@ func (d *Driver) Write(collection, resource string, v interface{}) error {
 	if resource == "" {
 		return fmt.Errorf("missing resource - no resource to save on (no name)")
 	}
-	mutex := d.getOrCreateMutex(collection)
 
+	mutex := d.getOrCreateMutex(collection)
 	mutex.Lock()
 	defer mutex.Unlock()
 
@@ -107,10 +107,13 @@ func (d *Driver) Write(collection, resource string, v interface{}) error {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
+
 	b, err := json.MarshalIndent(v, "", "\t")
+
 	if err != nil {
 		return err
 	}
+
 	b = append(b, byte('\n'))
 
 	if err := ioutil.WriteFile(tmpPath, b, 0644); err != nil {
@@ -127,7 +130,7 @@ func (d *Driver) Read(collection, resource string, v interface{}) error {
 	}
 
 	if resource == "" {
-		return fmt.Errorf("Missing resource - no resource to read record (no name)!")
+		return fmt.Errorf("missing resource - no resource to read record (no name)")
 	}
 
 	record := filepath.Join(d.dir, collection, resource)
@@ -135,12 +138,13 @@ func (d *Driver) Read(collection, resource string, v interface{}) error {
 	if _, err := checkDir(record); err != nil {
 		return err
 	}
-	//reading from db
+
 	b, err := ioutil.ReadFile(record + ".json")
 
 	if err != nil {
 		return err
 	}
+
 	return json.Unmarshal(b, &v)
 }
 
@@ -185,27 +189,23 @@ func (d *Driver) Delete(collection, resource string) error {
 	switch fi, err := checkDir(dir); {
 	case fi == nil, err != nil:
 		return fmt.Errorf("unable to find file or directory name %v", path)
-
-	//removing entire folder
 	case fi.Mode().IsDir():
 		return os.RemoveAll(dir)
-
-	//removing all files inside folder
 	case fi.Mode().IsRegular():
 		return os.RemoveAll(dir + ".json")
 	}
-	return nil
 
+	return nil
 }
 
-// mutual exlucsion lock = mutex
 func (d *Driver) getOrCreateMutex(collection string) *sync.Mutex {
-	//mutexes are a map
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
+
 	m, exist := d.mutexes[collection]
+
 	if !exist {
-		m = &sync.Mutex{} //basically create an empty mutex
+		m = &sync.Mutex{}
 		d.mutexes[collection] = m
 	}
 
